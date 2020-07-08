@@ -11,7 +11,7 @@ import time
 from uuid import uuid4
 import mlflow
 import re
-from mlflow.entities import RunStatus, Param, Metric
+from mlflow.entities import RunStatus, Param, Metric, RunTag
 from mlflow.tracking.client import MlflowClient
 
 OK = RunStatus.to_string(RunStatus.FINISHED)
@@ -41,7 +41,8 @@ class FlowTask:
         self.handle["metric"] = self.log_metric
         self.handle["metrics"] = self.log_metrics
         self.handle["artifact"] = self.log_artifact
-        # self.handle["end"] = self.end_run
+        self.handle["tag"] = self.log_tag
+        self.handle["tags"] = self.log_tags
 
     def listen(self, msg):
         try:
@@ -65,6 +66,14 @@ class FlowTask:
         log.write(value)
         log.flush()
         self.flow_client.log_artifact(self.get_run_id(run_name=run_name), fn)
+
+    def log_tag(self, run_name, key, value):
+        self.flow_client.set_tag(self.get_run_id(run_name), key, value)
+
+    def log_tags(self, run_name, pack):
+        tags = json.loads(pack.strip('"'))
+        tags_arr = [RunTag(key, str(value)) for key, value in tags.items()]
+        self.flow_client.log_batch(run_id=self.get_run_id(run_name), metrics=[], params=[], tags=tags_arr)
 
     def log_param(self, run_name, pack):
         key, value = pack.split(":")
@@ -128,7 +137,6 @@ class FlowTask:
 
 if not os.path.exists('outputs'):
     os.mkdir('outputs')
-
 
 
 @click.command()
