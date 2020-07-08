@@ -173,7 +173,7 @@ def call_actor(data: dict):
     cli = Cli(cookie)
     cli.write(data)
     file = cli.toml_file_path
-    command = f"cd {QAACOUNTPRO_RS_RELEASE} && {QAACOUNTPRO_RS_MAIN} {file}"
+    command = f"{QAACOUNTPRO_RS_RELEASE}/{QAACOUNTPRO_RS_MAIN} {file}"
     print(command)
     #
     cmd = shlex.split(command)
