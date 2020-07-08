@@ -2,3 +2,5 @@
 /temp/
 /__pycache__/
 .idea
+/mlruns/
+nohup.out
