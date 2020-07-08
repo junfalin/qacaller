@@ -143,7 +143,7 @@ MQ_PORT = os.getenv("CELERY_MQ_PORT", 5672)
 MQ_USER = os.getenv("CELERY_MQ_USER", "admin")
 MQ_PWD = os.getenv("CELERY_MQ_PWD", "admin")
 
-QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "D:\\QA_Rep\\qaaccountpro-rs\\target\\release\\examples")
+QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "D:/QA_Rep/qaaccountpro-rs/target/release/examples")
 QAACOUNTPRO_RS_MAIN = os.getenv("QAACOUNTPRO_RS_MAIN", "arp_actor_single")
 
 celery = Celery('mlflow2rs', broker=f'amqp://{MQ_USER}:{MQ_PWD}@{MQ_IP}:{MQ_PORT}/')
@@ -172,26 +172,19 @@ def call_actor(data: dict):
     cookie = data['cli']['name'][0]
     cli = Cli(cookie)
     cli.write(data)
-    file = cli.toml_file_path.replace("\\", "\\\\")
-    command = f"d: && cd {QAACOUNTPRO_RS_RELEASE} && {QAACOUNTPRO_RS_MAIN}.exe {file}"
+    file = cli.toml_file_path
+    command = f"d: && cd {QAACOUNTPRO_RS_RELEASE} && {QAACOUNTPRO_RS_MAIN} {file}"
     print(command)
     #
     cmd = shlex.split(command)
     p = subprocess.Popen(
         cmd, shell=True, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    try:
-        line = p.stdout.readline().decode()
-    except Exception as e:
-        line = p.stdout.readline().decode('gbk')
-    if line:
-        print(line)
     while p.poll() is None:
         try:
-            line = p.stdout.readline().decode()
+            line = p.stdout.readline()
         except Exception as e:
             line = p.stdout.readline().decode('gbk')
-        if line:
-            print(line)
+        print(line)
     return "done"
 
     # with FlowTask(cookie) as ft:
