@@ -4,6 +4,7 @@ WORKDIR /home/qacaller
 
 
 COPY . .
+COPY ./config  /usr/local/cargo/config
 ENV QAACOUNTPRO_RS_ROOT=/home/project/qaaccpro_rs
 ENV QAACOUNTPRO_RS_RELEASE=/home/project/qaaccpro_rs/target/release/examples
 ENV QAACOUNTPRO_RS_MAIN=arp_actor_single

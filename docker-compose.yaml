@@ -1,8 +1,8 @@
 version: '2'
 services:
-    qaflow:
+    qacaller:
         build: .
-        container_name: qaflow
+        container_name: qacaller
         ports:
           - "8864:8864"
           - "5555:5555"

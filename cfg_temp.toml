@@ -1,7 +1,7 @@
 [account]
 host = "localhost"
 port = 27017
-db = "QAREALTIME" # in fetch: QAREALTIME
+db = "QAREALTIME"
 
 [hisdata]
 host = "localhost"
