@@ -25,11 +25,10 @@ RUN apt-get update\
     && apt-get install -y python3-pip
 
 RUN python3.7 -m pip install -r requirements.txt -i https://pypi.douban.com/simple\
-    && git clone https://yutiansut:6b4bc9ab4ce95028e68d20ddd2a56ba6bc7d4045@github.com/yutiansut/qaaccountpro-rs.git $QAACOUNTPRO_RS_ROOT
-#    && cd $QAACOUNTPRO_RS_ROOT\
-#    && cargo update\
-#    && cargo build --example arp_actor_single --release
+    && git clone https://yutiansut:6b4bc9ab4ce95028e68d20ddd2a56ba6bc7d4045@github.com/yutiansut/qaaccountpro-rs.git $QAACOUNTPRO_RS_ROOT\
+    && cd $QAACOUNTPRO_RS_ROOT\
+    && cargo update\
+    && cargo build --example arp_actor_single --release
 
 
 EXPOSE 8864
-EXPOSE 5555

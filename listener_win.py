@@ -1,8 +1,6 @@
 import os
 import subprocess
 import shlex
-
-import click
 from celery import Celery
 import toml
 # Dispatching Management System
@@ -39,7 +37,6 @@ class FlowTask:
     """
     由于mlflow限制，单个进程中只能有active Run
     """
-
     def __init__(self, experiment_name):
         self.my_active_run_stack = []
         self.flow_client = MlflowClient()
@@ -146,7 +143,7 @@ MQ_PORT = os.getenv("CELERY_MQ_PORT", 5672)
 MQ_USER = os.getenv("CELERY_MQ_USER", "admin")
 MQ_PWD = os.getenv("CELERY_MQ_PWD", "admin")
 
-QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "/home/project/qaaccpro_rs/target/release/examples")
+QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "D:/QA_Rep/qaaccountpro-rs/target/release/examples")
 QAACOUNTPRO_RS_MAIN = os.getenv("QAACOUNTPRO_RS_MAIN", "arp_actor_single")
 
 celery = Celery('mlflow2rs', broker=f'amqp://{MQ_USER}:{MQ_PWD}@{MQ_IP}:{MQ_PORT}/')
@@ -159,40 +156,15 @@ class Cli:
         if not file_name.endswith('.toml'):
             file_name += ".toml"
         self.toml_file_path = os.path.join(os.path.join(BASE_DIR, 'temp'), file_name)
-        self.cfg_temp = self.read_cfg_temp()
 
-    def read_cfg_temp(self):
-        with open(os.path.join(BASE_DIR, "cfg_temp.toml"), "r", encoding="utf-8") as fs:
+    def write(self, data: dict):
+        with open(self.toml_file_path, "w", encoding="utf-8") as fs:
+            toml.dump(data, fs)
+
+    def read(self):
+        with open(self.toml_file_path, "r", encoding="utf-8") as fs:
             t_data = toml.load(fs)
         return t_data
 
-    def write(self):
-        with open(self.toml_file_path, "w", encoding="utf-8") as fs:
-            toml.dump(self.cfg_temp, fs)
 
 
-@click.command()
-@click.option("--name", help="strategy name")
-def hello_world(name):
-    cli = Cli(name)
-    cli.cfg_temp['cli']['name'] = [name]
-    cli.write()
-    cf = cli.toml_file_path
-    command = f"{QAACOUNTPRO_RS_RELEASE}/{QAACOUNTPRO_RS_MAIN} {cf}"
-    cookie = name
-    with FlowTask(cookie) as ft:
-        cmd = shlex.split(command)
-        p = subprocess.Popen(
-            cmd, shell=True, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        while p.poll() is None:
-            try:
-                line = p.stdout.readline().decode()
-            except Exception as e:
-                line = p.stdout.readline().decode('gbk')
-            if line:
-                print(line)
-                ft.listen(line)
-
-
-if __name__ == '__main__':
-    hello_world()
