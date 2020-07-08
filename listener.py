@@ -140,7 +140,7 @@ MQ_PORT = os.getenv("CELERY_MQ_PORT", 5672)
 MQ_USER = os.getenv("CELERY_MQ_USER", "admin")
 MQ_PWD = os.getenv("CELERY_MQ_PWD", "admin")
 
-QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "/home/qaaccountpro_rs/target/release/examples")
+QAACOUNTPRO_RS_RELEASE = os.getenv("QAACOUNTPRO_RS_RELEASE", "/home")
 QAACOUNTPRO_RS_MAIN = os.getenv("QAACOUNTPRO_RS_MAIN", "arp_actor_single")
 
 celery = Celery('mlflow2rs', broker=f'amqp://{MQ_USER}:{MQ_PWD}@{MQ_IP}:{MQ_PORT}/')
@@ -150,6 +150,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Cli:
     def __init__(self, file_name):
+        if not file_name.endswith('.toml'):
+            file_name += ".toml"
         self.toml_file_path = os.path.join(os.path.join(BASE_DIR, 'temp'), file_name)
 
     def write(self, data: dict):
@@ -169,6 +171,7 @@ def call_actor(data: dict):
     cli.write(data)
     file = cli.toml_file_path
     command = f"cd {QAACOUNTPRO_RS_RELEASE} & {QAACOUNTPRO_RS_MAIN} {file}"
+    print(command)
     with FlowTask(cookie) as ft:
         cmd = shlex.split(command)
         p = subprocess.Popen(

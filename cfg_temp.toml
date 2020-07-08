@@ -1,0 +1,25 @@
+[account]
+host = "localhost"
+port = 27017
+db = "QAREALTIME" # in fetch: QAREALTIME
+
+[hisdata]
+host = "localhost"
+port = 27017
+db = "quantaxis"
+
+[mq]
+host = "localhost"
+port = 5672
+user = "admin"
+password = "admin"
+
+[redis]
+host = "localhost"
+port = 6379
+
+[cli]
+name = ["t01"]
+codes = ["i2009"]
+freqs = ['1min','5min']
+params = 'default'
