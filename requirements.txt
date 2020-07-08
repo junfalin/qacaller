@@ -1,0 +1,3 @@
+mlflow==1.8.0
+celery==4.4.5
+flower==0.9.4

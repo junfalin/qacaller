@@ -1,0 +1,16 @@
+version: '2'
+services:
+    qaflow:
+        build: .
+        container_name: qaflow
+        ports:
+          - "8864:8864"
+          - "5555:5555"
+        environment:
+          - TZ=Asia/Shanghai
+          - LANG=C.UTF-8
+          - CELERY_MQ_IP=localhost
+          - CELERY_MQ_PORT=5672
+          - CELERY_MQ_USER=admin
+          - CELERY_MQ_PWD=admin
+        restart: always
