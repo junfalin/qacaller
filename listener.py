@@ -57,7 +57,7 @@ class FlowTask:
 
     def log_artifact(self, run_name, value):
         fn, log = self.logs[run_name]
-        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {value}")
+        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {value}\n")
         log.flush()
         self.flow_client.log_artifact(self.get_run_id(run_name=run_name), fn)
 
@@ -132,6 +132,18 @@ if not os.path.exists('outputs'):
     os.mkdir('outputs')
 
 
+def test():
+    with FlowTask("test") as ft:
+        ft.listen("test@artifact@hello")
+        ft.listen("test@param@K1:100")
+        ft.listen('test@params@{"ma":20,"K2":3}')
+        for i in range(10):
+            ft.listen(f"thread1@metric@number:{i}")
+            ft.listen(f'thread1@metrics@{{"age":{i + 2},"total":{i + 3}}}')
+        ft.listen("test@tag@color:red")
+        ft.listen('test@tags@{"age":"18","sex":"male"}')
+
+
 @click.command()
 @click.option("--cmd", help="command")
 @click.option("--run", help="run_name")
@@ -151,3 +163,4 @@ def listen(cmd, run):
 
 if __name__ == '__main__':
     listen()
+    # test()
