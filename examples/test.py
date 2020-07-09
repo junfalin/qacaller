@@ -1,3 +1,4 @@
+print("test@artifact@hello")
 
 print("test@param@K1:100")
 
@@ -11,4 +12,3 @@ for i in range(10):
 print("test@tag@color:red")
 
 print('test@tags@{"age":"18","sex":"male"}')
-print("test@artifact@hello")

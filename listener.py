@@ -22,7 +22,7 @@ pattern = re.compile(r"(.*?)@(.*?)@(.*)")
 
 class FlowTask:
     """
-    由于mlflow限制，单个进程中只能有active Run
+    由于mlflow限制，单个进程中只能启动一个
     """
 
     def __init__(self, experiment_name):
@@ -53,7 +53,7 @@ class FlowTask:
             if do in self.handle:
                 self.handle[do](run_name, pack)
         except Exception as e:
-            print("Exception",e)
+            print("Exception", e)
 
     def log_artifact(self, run_name, value):
         fn, log = self.logs[run_name]
@@ -66,16 +66,16 @@ class FlowTask:
         self.flow_client.set_tag(self.get_run_id(run_name), key, value)
 
     def log_tags(self, run_name, pack):
-        tags = json.loads(pack.strip('"'))
+        tags = json.loads(pack.strip('"').replace("'", '"'))
         tags_arr = [RunTag(key, str(value)) for key, value in tags.items()]
-        self.flow_client.log_batch(run_id=self.get_run_id(run_name), metrics=[], params=[], tags=tags_arr)
+        self.flow_client.log_batch(run_id=self.get_run_id(run_name), tags=tags_arr)
 
     def log_param(self, run_name, pack):
         key, value = pack.split(":")
         self.flow_client.log_param(self.get_run_id(run_name=run_name), key=key, value=value)
 
     def log_params(self, run_name, pack):
-        params = json.loads(pack.strip('"'))
+        params = json.loads(pack.strip('"').replace("'", '"'))
         params_arr = [Param(key, str(value)) for key, value in params.items()]
         self.flow_client.log_batch(self.get_run_id(run_name=run_name), params=params_arr)
 
@@ -97,7 +97,7 @@ class FlowTask:
         :return:
         """
 
-        metrics = json.loads(pack.strip('"'))
+        metrics = json.loads(pack.strip('"').replace("'", '"'))
         timestamp = int(time.time() * 1000)
         metrics_arr = [Metric(key, value, timestamp, step or 0) for key, value in metrics.items()]
         self.flow_client.log_batch(self.get_run_id(run_name=run_name), metrics=metrics_arr)
@@ -146,9 +146,7 @@ def listen(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print("print:", line)
                 ft.listen(line)
-    print("finished!")
 
 
 if __name__ == '__main__':
