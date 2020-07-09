@@ -2,7 +2,7 @@ import os
 import subprocess
 import shlex
 import click
-import toml
+import sys
 # Dispatching Management System
 import datetime
 import json
@@ -28,11 +28,11 @@ class FlowTask:
     def __init__(self, experiment_name):
         self.my_active_run_stack = []
         self.flow_client = MlflowClient()
-        self.run_pool = {}
+        self.run_pool = {}  # run_name:Run
         self.handle = {}
-        self.logs = {}
+        self.logs = {}  # run_id:(fn,fs)
         self.eid = mlflow.set_experiment(experiment_name=experiment_name)
-        self.start_run(experiment_name)
+        self.start_run(experiment_name, nested=False)
         self._register()
 
     def _register(self):
@@ -56,10 +56,11 @@ class FlowTask:
             print("Exception", e)
 
     def log_artifact(self, run_name, value):
-        fn, log = self.logs[run_name]
+        run_id = self.get_run_id(run_name)
+        fn, log = self.logs[run_id]
         log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {value}\n")
         log.flush()
-        self.flow_client.log_artifact(self.get_run_id(run_name=run_name), fn)
+        self.flow_client.log_artifact(run_id, fn)
 
     def log_tag(self, run_name, pack):
         key, value = pack.split(":")
@@ -102,11 +103,11 @@ class FlowTask:
         metrics_arr = [Metric(key, value, timestamp, step or 0) for key, value in metrics.items()]
         self.flow_client.log_batch(self.get_run_id(run_name=run_name), metrics=metrics_arr)
 
-    def start_run(self, run_name):
-        x = mlflow.start_run(experiment_id=self.eid, nested=True, run_name=run_name)
+    def start_run(self, run_name, nested=True):
+        x = mlflow.start_run(experiment_id=self.eid, nested=nested, run_name=run_name)
         self.run_pool[run_name] = x
         fname = f"outputs/log_{uuid4()}.txt"
-        self.logs[run_name] = (fname, open(fname, 'w', encoding="utf8"))
+        self.logs[x.info.run_id] = (fname, open(fname, 'w', encoding="utf8"))
         return x.info.run_id
 
     def get_run_id(self, run_name):
@@ -145,9 +146,12 @@ def test():
 
 
 @click.command()
-@click.option("--cmd", help="command")
-@click.option("--run", help="run_name")
-def listen(cmd, run):
+@click.option("--cmd", default="", help="command")
+@click.option("--run", default="", help="run_name")
+def cmdline(cmd, run):
+    if cmd == "" or run == "":
+        print("qacaller --help 查看帮助")
+        sys.exit(0)
     with FlowTask(run) as ft:
         command = shlex.split(cmd)
         p = subprocess.Popen(
@@ -158,9 +162,10 @@ def listen(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
+                print("[listen]:",line)
                 ft.listen(line)
 
 
 if __name__ == '__main__':
-    listen()
+    cmdline()
     # test()
