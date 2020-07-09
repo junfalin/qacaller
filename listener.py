@@ -28,11 +28,11 @@ class FlowTask:
     def __init__(self, experiment_name):
         self.my_active_run_stack = []
         self.flow_client = MlflowClient()
-        self.eid = mlflow.set_experiment(experiment_name=experiment_name)
-        self.master_run = mlflow.start_run(experiment_id=self.eid, run_name="monitor")
-        self.run_pool = {"monitor": self.master_run}
+        self.run_pool = {}
         self.handle = {}
         self.logs = {}
+        self.eid = mlflow.set_experiment(experiment_name=experiment_name)
+        self.start_run(experiment_name)
         self._register()
 
     def _register(self):
@@ -48,26 +48,21 @@ class FlowTask:
         try:
             msg = msg.split("@", 2)
             if len(msg) == 1:
-                self.monitor_artifact(msg[0])
                 return
             run_name, do, pack = msg
             if do in self.handle:
                 self.handle[do](run_name, pack)
         except Exception as e:
-            self.monitor_artifact(str(e))
-
-    def monitor_artifact(self, msg):
-        self.log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {msg}")
-        self.log.flush()
-        self.flow_client.log_artifact(self.master_run.info.run_id, self._fname)
+            print("Exception",e)
 
     def log_artifact(self, run_name, value):
         fn, log = self.logs[run_name]
-        log.write(value)
+        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {value}")
         log.flush()
         self.flow_client.log_artifact(self.get_run_id(run_name=run_name), fn)
 
-    def log_tag(self, run_name, key, value):
+    def log_tag(self, run_name, pack):
+        key, value = pack.split(":")
         self.flow_client.set_tag(self.get_run_id(run_name), key, value)
 
     def log_tags(self, run_name, pack):
@@ -107,27 +102,25 @@ class FlowTask:
         metrics_arr = [Metric(key, value, timestamp, step or 0) for key, value in metrics.items()]
         self.flow_client.log_batch(self.get_run_id(run_name=run_name), metrics=metrics_arr)
 
-    def get_run_id(self, run_name):
-        if run_name in self.run_pool:
-            return self.run_pool[run_name].info.run_id
+    def start_run(self, run_name):
         x = mlflow.start_run(experiment_id=self.eid, nested=True, run_name=run_name)
         self.run_pool[run_name] = x
         fname = f"outputs/log_{uuid4()}.txt"
         self.logs[run_name] = (fname, open(fname, 'w', encoding="utf8"))
         return x.info.run_id
 
+    def get_run_id(self, run_name):
+        if run_name in self.run_pool:
+            return self.run_pool[run_name].info.run_id
+        return self.start_run(run_name)
+
     def end_run(self, run_name, status=OK):
         self.flow_client.set_terminated(self.get_run_id(run_name), status=status)
 
     def __enter__(self):
-        self._fname = f"outputs/log_{uuid4()}.txt"
-        self.log = open(self._fname, 'w', encoding="utf8")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.log.write(f"EXIT_TYPE:{exc_type}\n")
-        self.log.write(f"EXIT_VAL:{exc_val}\n")
-        self.log.close()
         for i in self.logs.values():
             i[1].close()
         for i in self.run_pool.keys():
@@ -153,8 +146,9 @@ def listen(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print(line)
+                print("print:", line)
                 ft.listen(line)
+    print("finished!")
 
 
 if __name__ == '__main__':
