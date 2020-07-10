@@ -6,7 +6,8 @@
 
 ### usage
 ```
-python listener.py --run <run_name> --cmd <command>
+pip install qacaller
+qacaller --run <run_name> --cmd <command>
 ```
 
 

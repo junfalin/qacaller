@@ -19,6 +19,8 @@ ERR = RunStatus.to_string(RunStatus.FAILED)
 KILL = RunStatus.to_string(RunStatus.KILLED)
 pattern = re.compile(r"(.*?)@(.*?)@(.*)")
 
+SHELL = False if sys.platform == 'linux' else True
+
 
 class FlowTask:
     """
@@ -155,14 +157,14 @@ def cmdline(cmd, run):
     with FlowTask(run) as ft:
         command = shlex.split(cmd)
         p = subprocess.Popen(
-            command, shell=True, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            command, shell=SHELL, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while p.poll() is None:
             try:
                 line = p.stdout.readline().decode()
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print("[listen]:",line)
+                print("[listen]:", line)
                 ft.listen(line)
 
 

@@ -10,7 +10,7 @@ install_requires = ['mlflow==1.8.0',
                     'click==7.1.2']
 setuptools.setup(
     name="qacaller",
-    version="0.0.2",
+    version="0.0.3",
     author="faithforus",
     author_email="ljunf817@163.com",
     description="power by mlflow tracking",
