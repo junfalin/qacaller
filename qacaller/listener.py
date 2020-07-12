@@ -33,6 +33,7 @@ class FlowTask:
         self.run_pool = {}  # run_name:Run
         self.handle = {}
         self.logs = {}  # run_id:(fn,fs)
+        self.name = experiment_name
         self.eid = mlflow.set_experiment(experiment_name=experiment_name)
         self.start_run(experiment_name, nested=False)
         self._register()
@@ -50,17 +51,19 @@ class FlowTask:
         try:
             msg = msg.split("@", 2)
             if len(msg) == 1:
+                self.log_artifact(self.name, msg[0])
                 return
-            run_name, do, pack = msg
-            if do in self.handle:
-                self.handle[do](run_name, pack)
+            if len(msg) == 3:
+                run_name, do, pack = msg
+                if do in self.handle:
+                    self.handle[do](run_name, pack)
         except Exception as e:
-            print("Exception", e)
+            print("[Exception]:", e)
 
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
         fn, log = self.logs[run_id]
-        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]>> {value}\n")
+        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]: {value}\n")
         log.flush()
         self.flow_client.log_artifact(run_id, fn)
 
@@ -138,6 +141,7 @@ if not os.path.exists('outputs'):
 def test():
     with FlowTask("test") as ft:
         ft.listen("test@artifact@hello")
+        ft.listen("We all have to learn to handle stress.")
         ft.listen("test@param@K1:100")
         ft.listen('test@params@{"ma":20,"K2":3}')
         for i in range(10):
@@ -164,10 +168,10 @@ def cmdline(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print("[listen]:", line)
+                print("[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line)
                 ft.listen(line)
 
 
 if __name__ == '__main__':
-    cmdline()
-    # test()
+    # cmdline()
+    test()
