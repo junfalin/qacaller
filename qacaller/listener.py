@@ -58,7 +58,7 @@ class FlowTask:
                 if do in self.handle:
                     self.handle[do](run_name, pack)
         except Exception as e:
-            print("[Exception]:", e)
+            print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}][Exception]:", e)
 
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
@@ -168,7 +168,7 @@ def cmdline(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print("[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line)
+                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line)
                 ft.listen(line)
 
 
