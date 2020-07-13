@@ -138,19 +138,6 @@ if not os.path.exists('outputs'):
     os.mkdir('outputs')
 
 
-def test():
-    with FlowTask("test") as ft:
-        ft.listen("test@artifact@hello")
-        ft.listen("We all have to learn to handle stress.")
-        ft.listen("test@param@K1:100")
-        ft.listen('test@params@{"ma":20,"K2":3}')
-        for i in range(10):
-            ft.listen(f"thread1@metric@number:{i}")
-            ft.listen(f'thread1@metrics@{{"age":{i + 2},"total":{i + 3}}}')
-        ft.listen("test@tag@color:red")
-        ft.listen('test@tags@{"age":"18","sex":"male"}')
-
-
 @click.command()
 @click.option("--cmd", default="", help="command")
 @click.option("--run", default="", help="run_name")
@@ -173,5 +160,4 @@ def cmdline(cmd, run):
 
 
 if __name__ == '__main__':
-    # cmdline()
-    test()
+    cmdline()
