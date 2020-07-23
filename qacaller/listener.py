@@ -20,6 +20,7 @@ KILL = RunStatus.to_string(RunStatus.KILLED)
 pattern = re.compile(r"(.*?)@(.*?)@(.*)")
 
 SHELL = False if sys.platform == 'linux' else True
+STEP = "\n" if sys.platform == 'linux' else "\r\n"
 
 
 class FlowTask:
@@ -58,7 +59,7 @@ class FlowTask:
                 if do in self.handle:
                     self.handle[do](run_name, pack)
         except Exception as e:
-            print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}][Exception]:", e)
+            print("[Exception]:", e, "[Message]:", "".join(msg))
 
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
@@ -157,7 +158,15 @@ def cmdline(cmd, run):
             if line:
                 print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
                 ft.listen(line)
-        p.wait()
+        stdout, stderr = p.communicate()
+        try:
+            x = stdout.decode().split(STEP)
+        except Exception as e:
+            x = stdout.decode('gbk').split(STEP)
+        for line in x:
+            if line:
+                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
+                ft.listen(line)
 
 
 if __name__ == '__main__':
