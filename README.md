@@ -2,12 +2,13 @@
 
 > 通过```MLflow```跟踪纪录程序运行的参数、指标、日志等信息
 >
->在mlruns 目录下执行 ```mlflow ui```打开可视化界面
+>在mlruns 目录下执行 ```mlflow ui```打开界面
 
 ### usage
 ```
 pip install qacaller
 qacaller --run <run_name> --cmd <command>
+mlflow ui
 ```
 
 

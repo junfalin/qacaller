@@ -63,7 +63,7 @@ class FlowTask:
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
         fn, log = self.logs[run_id]
-        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]: {value}\n")
+        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]: {value.strip()}\n")
         log.flush()
         self.flow_client.log_artifact(run_id, fn)
 
@@ -155,8 +155,9 @@ def cmdline(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line)
+                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
                 ft.listen(line)
+        p.wait()
 
 
 if __name__ == '__main__':
