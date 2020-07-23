@@ -142,7 +142,8 @@ if not os.path.exists('outputs'):
 @click.command()
 @click.option("--cmd", default="", help="command")
 @click.option("--run", default="", help="run_name")
-def cmdline(cmd, run):
+@click.option("--o", default=False, type=bool, help="print or not")
+def cmdline(cmd, run, o):
     if cmd == "" or run == "":
         print("qacaller --help 查看帮助")
         sys.exit(0)
@@ -156,7 +157,8 @@ def cmdline(cmd, run):
             except Exception as e:
                 line = p.stdout.readline().decode('gbk')
             if line:
-                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
+                if o:
+                    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
                 ft.listen(line)
         stdout, stderr = p.communicate()
         try:
@@ -165,7 +167,8 @@ def cmdline(cmd, run):
             x = stdout.decode('gbk').split(STEP)
         for line in x:
             if line:
-                print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
+                if o:
+                    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
                 ft.listen(line)
 
 
