@@ -19,7 +19,6 @@ ERR = RunStatus.to_string(RunStatus.FAILED)
 KILL = RunStatus.to_string(RunStatus.KILLED)
 pattern = re.compile(r"(.*?)@(.*?)@(.*)")
 
-SHELL = False if sys.platform == 'linux' else True
 STEP = "\n" if sys.platform == 'linux' else "\r\n"
 
 
@@ -59,12 +58,12 @@ class FlowTask:
                 if do in self.handle:
                     self.handle[do](run_name, pack)
         except Exception as e:
-            print("[Exception]:", e, "[Message]:", "".join(msg))
+            print("[", "Exception:", e, "\nMessage:", "".join(msg), "]")
 
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
         fn, log = self.logs[run_id]
-        log.write(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]: {value.strip()}\n")
+        log.write("[{}]: {}\n".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), value.strip()))
         log.flush()
         self.flow_client.log_artifact(run_id, fn)
 
@@ -112,7 +111,10 @@ class FlowTask:
     def start_run(self, run_name, nested=True):
         x = mlflow.start_run(experiment_id=self.eid, nested=nested, run_name=run_name)
         self.run_pool[run_name] = x
-        fname = f"outputs/log_{uuid4()}.txt"
+        p = 'outputs/{}{}'.format(run_name, uuid4())
+        if not os.path.exists(p):
+            os.mkdir(p)
+        fname = p + "/log.txt"
         self.logs[x.info.run_id] = (fname, open(fname, 'w', encoding="utf8"))
         return x.info.run_id
 
@@ -150,7 +152,7 @@ def cmdline(cmd, run, o):
     with FlowTask(run) as ft:
         command = shlex.split(cmd)
         p = subprocess.Popen(
-            command, shell=SHELL, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while p.poll() is None:
             try:
                 line = p.stdout.readline().decode()
@@ -158,7 +160,7 @@ def cmdline(cmd, run, o):
                 line = p.stdout.readline().decode('gbk')
             if line:
                 if o:
-                    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
+                    print("[{}]:{}".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), line.strip()))
                 ft.listen(line)
         stdout, stderr = p.communicate()
         try:
@@ -168,7 +170,7 @@ def cmdline(cmd, run, o):
         for line in x:
             if line:
                 if o:
-                    print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:", line.strip())
+                    print("[{}]:{}".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), line.strip()))
                 ft.listen(line)
 
 

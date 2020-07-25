@@ -8,6 +8,8 @@ for i in range(10):
 print("test@tag@color:red")
 print("test@tag@color:Green")
 print('test@tags@{"age":"18","性别":"male"}')
+print("thread1@artifact@helloworld！")
+
 1 / 0
 
 r"""
