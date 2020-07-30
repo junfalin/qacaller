@@ -21,6 +21,11 @@ pattern = re.compile(r"(.*?)@(.*?)@(.*)")
 
 STEP = "\n" if sys.platform == 'linux' else "\r\n"
 
+if not os.path.exists('outputs'):
+    os.mkdir('outputs')
+
+#os.environ['GIT_PYTHON_REFRESH'] = os.environ.get("GIT_PYTHON_REFRESH", "quiet")
+
 
 class FlowTask:
     """
@@ -62,8 +67,14 @@ class FlowTask:
 
     def log_artifact(self, run_name, value):
         run_id = self.get_run_id(run_name)
-        fn, log = self.logs[run_id]
-        log.write("[{}]: {}\n".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), value.strip()))
+        fn, log, create_date = self.logs[run_id]
+        now = datetime.datetime.now()
+        if now.day != create_date.day:
+            log.close()
+            fname = "{}/log_{}.txt".format(os.path.dirname(fn), now.strftime('%Y-%m-%d'))
+            self.logs[run_id] = (fname, open(fname, 'w', encoding="utf8"), now)
+            fn, log, _ = self.logs[run_id]
+        log.write("[{}]: {}\n".format(now.strftime('%H:%M:%S'), value.strip()))
         log.flush()
         self.flow_client.log_artifact(run_id, fn)
 
@@ -114,8 +125,9 @@ class FlowTask:
         p = 'outputs/{}{}'.format(run_name, uuid4())
         if not os.path.exists(p):
             os.mkdir(p)
-        fname = p + "/log.txt"
-        self.logs[x.info.run_id] = (fname, open(fname, 'w', encoding="utf8"))
+        now = datetime.datetime.now()
+        fname = "{}/log_{}.txt".format(p, now.strftime('%Y-%m-%d'))
+        self.logs[x.info.run_id] = (fname, open(fname, 'w', encoding="utf8"), now)
         return x.info.run_id
 
     def get_run_id(self, run_name):
@@ -137,22 +149,11 @@ class FlowTask:
         return False
 
 
-if not os.path.exists('outputs'):
-    os.mkdir('outputs')
-
-
-@click.command()
-@click.option("--cmd", default="", help="command")
-@click.option("--run", default="", help="run_name")
-@click.option("--o", default=False, type=bool, help="print or not")
-def cmdline(cmd, run, o):
-    if cmd == "" or run == "":
-        print("qacaller --help 查看帮助")
-        sys.exit(0)
+def run_and_wait(run, cmd, o=False):
+    command = shlex.split(cmd)
+    p = subprocess.Popen(
+        command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with FlowTask(run) as ft:
-        command = shlex.split(cmd)
-        p = subprocess.Popen(
-            command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         while p.poll() is None:
             try:
                 line = p.stdout.readline().decode()
@@ -172,6 +173,17 @@ def cmdline(cmd, run, o):
                 if o:
                     print("[{}]:{}".format(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'), line.strip()))
                 ft.listen(line)
+
+
+@click.command()
+@click.option("--cmd", default="", help="command")
+@click.option("--run", default="", help="run_name")
+@click.option("--o", default=False, type=bool, help="print or not")
+def cmdline(cmd, run, o):
+    if cmd == "" or run == "":
+        print("qacaller --help 查看帮助")
+        sys.exit(0)
+    run_and_wait(run, cmd, o)
 
 
 if __name__ == '__main__':

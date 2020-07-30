@@ -7,7 +7,7 @@
 ### Usage
 ```
 pip install qacaller
-qacaller --run <run_name> --cmd <command>
+qacaller --run <run_name> --cmd <command> --o True
 mlflow ui
 ```
 
@@ -38,19 +38,19 @@ qacaller --run test --cmd "python <absolute path>/test.py"
 > 需调用程序遵循协议并打印输出
 ```
     
-    - run_name@artifact@[str]            //日志文件
+    - <run_name>@artifact@[str]            //日志文件
    
-    - run_name@param@[key]:[str]         //参数,不可覆盖      
+    - <run_name>@param@[key]:[str]         //参数,不可覆盖      
     
-    - run_name@params@[json]
+    - <run_name>@params@[json]
     
-    - run_name@metric@[key]:[float/int]  //指标,可累积
+    - <run_name>@metric@[key]:[float/int]  //指标,可累积
     
-    - run_name@metrics@[json]
+    - <run_name>@metrics@[json]
     
-    - run_name@tag@[key]:[str]           //标签,可覆盖
+    - <run_name>@tag@[key]:[str]           //标签,可覆盖
 
-    - run_name@tags@[json]
+    - <run_name>@tags@[json]
 ```
 
 

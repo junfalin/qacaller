@@ -5,12 +5,12 @@ try:
 
     long_description = pypandoc.convert_file('README.md', 'rst')
 except Exception:
-    long_description = ""
+    long_description = "params ,metrics, log"
 install_requires = ['mlflow==1.8.0',
                     'click==7.1.2']
 setuptools.setup(
     name="qacaller",
-    version="0.1.1",
+    version="0.1.2",
     author="faithforus",
     author_email="ljunf817@163.com",
     description="power by mlflow tracking",
